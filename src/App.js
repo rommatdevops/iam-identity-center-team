@@ -3,13 +3,12 @@
 // http://aws.amazon.com/agreement or other written agreement between Customer and either
 // Amazon Web Services, Inc. or Amazon Web Services EMEA SARL or both.
 import React, { useEffect, useState } from "react";
-import  { Amplify, Auth, Hub } from "aws-amplify";
+import { Amplify, Auth, Hub } from "aws-amplify";
 import { Spin, Layout } from "antd";
 import awsconfig from "./aws-exports";
 import Nav from "./components/Navigation/Nav";
 import home from "./media/Home.svg";
 import "./index.css";
-import { fetchGroups } from "./components/Shared/RequestService";
 import { Button } from "@awsui/components-react";
 
 const { Header, Content } = Layout;
@@ -49,7 +48,7 @@ function App() {
       switch (event) {
         case "signIn":
           console.log("User signed in");
-          break
+          break;
         // eslint-disable-next-line no-fallthrough
         case "cognitoHostedUI":
           setData();
@@ -60,26 +59,25 @@ function App() {
           break;
         case "signIn_failure":
           console.log("User sign in failure");
-          break
+          break;
         case "cognitoHostedUI_failure":
           console.log("Sign in failure");
           break;
       }
     });
-    
-    setData()
+
+    setData();
   }, []);
 
   function setData() {
     getUser().then((userData) => {
       setUser(userData);
-      setcognitoGroups(userData.signInUserSession.idToken.payload['cognito:groups'])
-      fetchGroups(userData.username).then(({userId,groupIds,groups})  => {
-        setUserId(userId)
-        setGroupIds( groupIds );
-        setGroups( groups );
-        setLoading(false);
-      });
+      const payload = userData.signInUserSession.idToken.payload;
+      setcognitoGroups(payload["cognito:groups"]);
+      setUserId(payload.userId);
+      setGroupIds((payload.groupIds).split(','));
+      setGroups((payload.groups).split(','));
+      setLoading(false);
     });
   }
 
@@ -96,7 +94,13 @@ function App() {
   return (
     <div>
       {groups ? (
-        <Nav user={user} groupIds={groupIds} userId={userId} groups={groups} cognitoGroups={cognitoGroups} />
+        <Nav
+          user={user}
+          groupIds={groupIds}
+          userId={userId}
+          groups={groups}
+          cognitoGroups={cognitoGroups}
+        />
       ) : (
         <Home loading={loading} />
       )}

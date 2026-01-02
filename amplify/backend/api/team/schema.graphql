@@ -3,8 +3,8 @@ type requests
   @auth(
     rules: [
       { allow: groups, groups: ["Auditors"], operations: [read] }
-      { allow: owner }
-      { allow: owner, ownerField: "approver_ids", operations: [update, read] }
+      { allow: owner, operations: [create, read] }
+      { allow: owner, ownerField: "approver_ids", operations: [read] }
       { allow: private, provider: iam, operations: [read, update] }
     ]
   ) {
@@ -15,6 +15,14 @@ type requests
       sortKeyFields: ["status"]
       queryField: "requestByEmailAndStatus"
     )
+  @auth(
+    rules: [
+      { allow: groups, groups: ["Auditors"], operations: [read] }
+      { allow: owner, operations: [read]}
+      { allow: owner, ownerField: "approver_ids", operations: [read] }
+      { allow: private, provider: iam, operations: [read, update] }
+    ]
+  )
   accountId: String!
   accountName: String!
   role: String!
@@ -23,22 +31,86 @@ type requests
   duration: String!
   justification: String
   status: String
+  @auth(
+    rules: [
+      { allow: groups, groups: ["Auditors"], operations: [read] }
+      { allow: owner, operations: [create, read, update] }
+      { allow: owner, ownerField: "approver_ids", operations: [update, read] }
+      { allow: private, provider: iam, operations: [read, update] }
+    ]
+  )
   comment: String
+  @auth(
+    rules: [
+      { allow: groups, groups: ["Auditors"], operations: [read] }
+      { allow: owner, operations: [read] }
+      { allow: owner, ownerField: "approver_ids", operations: [update, read] }
+      { allow: private, provider: iam, operations: [read, update] }
+    ]
+  )
   username: String
   approver: String
+  @auth(
+    rules: [
+      { allow: groups, groups: ["Auditors"], operations: [read] }
+      { allow: owner, operations: [read]}
+      { allow: owner, ownerField: "approver_ids", operations: [read] }
+      { allow: private, provider: iam, operations: [read, update] }
+    ]
+  )
   approverId: String
     @index(
       name: "byApproverAndStatus"
       sortKeyFields: ["status"]
       queryField: "requestByApproverAndStatus"
     )
+  @auth(
+    rules: [
+      { allow: groups, groups: ["Auditors"], operations: [read] }
+      { allow: owner, operations: [read]}
+      { allow: owner, ownerField: "approver_ids", operations: [update,read] }
+      { allow: private, provider: iam, operations: [read, update] }
+    ]
+  )
   approvers: [String]
+  @auth(
+    rules: [
+      { allow: groups, groups: ["Auditors"], operations: [read] }
+      { allow: owner, operations: [read]}
+      { allow: owner, ownerField: "approver_ids", operations: [read] }
+      { allow: private, provider: iam, operations: [read, update] }
+    ]
+  )
   approver_ids: [String]
+  @auth(
+    rules: [
+      { allow: groups, groups: ["Auditors"], operations: [read] }
+      { allow: owner, operations: [read]}
+      { allow: owner, ownerField: "approver_ids", operations: [read] }
+      { allow: private, provider: iam, operations: [read, update] }
+    ]
+  )
   revoker: String
   revokerId: String
+  @auth(
+    rules: [
+      { allow: groups, groups: ["Auditors"], operations: [read] }
+      { allow: owner, operations: [read, update]}
+      { allow: owner, ownerField: "approver_ids", operations: [update,read] }
+      { allow: private, provider: iam, operations: [read, update] }
+    ]
+  )
   endTime: AWSDateTime
   ticketNo: String
   revokeComment: String
+  @auth(
+    rules: [
+      { allow: groups, groups: ["Auditors"], operations: [read] }
+      { allow: owner, operations: [update,read]}
+      { allow: owner, ownerField: "approver_ids", operations: [update,read] }
+      { allow: private, provider: iam, operations: [read,update] }
+    ]
+  )
   session_duration: String
 }
 type sessions
@@ -99,6 +171,7 @@ type Settings
   sesNotificationsEnabled: Boolean
   snsNotificationsEnabled: Boolean
   slackNotificationsEnabled: Boolean
+  slackAuditNotificationsChannel: String
   sesSourceEmail: String
   sesSourceArn: String
   slackToken: String
@@ -189,6 +262,7 @@ type MgmtPs {
 type Policy @aws_iam @aws_cognito_user_pools {
   id: String!
   policy: [Entitlement]
+  username: String!
 }
 
 type OUs @aws_iam @aws_cognito_user_pools {
@@ -198,6 +272,7 @@ type OUs @aws_iam @aws_cognito_user_pools {
 input PolicyInput {
   id: String!
   policy: [EntitlementInput]
+  username: String!
 }
 
 input OUsInput {
@@ -265,9 +340,6 @@ type Query {
   getMgmtPermissions: MgmtPs
     @function(name: "teamgetMgmtAccountDetails-${env}")
     @auth(rules: [{ allow: private }])
-  getGroups: Groups
-    @function(name: "teamgetGroups-${env}")
-    @auth(rules: [{ allow: private }])
   getIdCGroups: [IdCGroups]
     @function(name: "teamgetIdCGroups-${env}")
     @auth(rules: [{ allow: private }])
@@ -301,3 +373,4 @@ type Query {
     @function(name: "teamvalidateRequest-${env}")
     @auth(rules: [{ allow: private }])
 }
+
